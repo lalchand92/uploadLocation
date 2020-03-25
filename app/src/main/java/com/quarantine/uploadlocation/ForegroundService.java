@@ -6,12 +6,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,36 +26,47 @@ public class ForegroundService extends Service {
 
     private final int pollingInterval = 60000; // 60 sec
 
+    private boolean isForgroundServiceRunning = false;
+
     private PollHandler pollHandler;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
         super.onCreate();
         pollHandler = new PollHandler(pollingInterval, callback, Looper.getMainLooper());
+        wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock");
+        wakeLock.acquire();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String input = intent.getStringExtra("inputExtra");
+        Log.d("Forground service : ", "connected with service isForgroundServiceRunning : " + isForgroundServiceRunning);
+        if(!isForgroundServiceRunning) {
+            String input = intent.getStringExtra("inputExtra");
 
-        createNotificationChannel();
+            createNotificationChannel();
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                    0, notificationIntent, 0);
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Foreground Service")
-                .setContentText(input)
-                .setSmallIcon(R.drawable.upload_location)
-                .setContentIntent(pendingIntent)
-                .build();
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Foreground Service")
+                    .setContentText(input)
+                    .setSmallIcon(R.drawable.upload_location)
+                    .setContentIntent(pendingIntent)
+                    .build();
 
-        startForeground(1, notification);
+            startForeground(1, notification);
 
-        startUploadingLocation();
+            startUploadingLocation();
 
-        return START_NOT_STICKY;
+            isForgroundServiceRunning = true;
+
+        }
+
+        return START_STICKY;
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -65,7 +77,7 @@ public class ForegroundService extends Service {
             protected Void doInBackground(Void... voids) {
                 // make an api call upload location
 
-                Log.d("Forground service : ", "service has been connected, we are start uploading location ");
+                Log.d("Forground service : ", "from back ground thread ");
                 startPoller();
                 return null;
             }
@@ -103,7 +115,9 @@ public class ForegroundService extends Service {
 
     @Override
     public void onDestroy() {
+        Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show();
         super.onDestroy();
+        isForgroundServiceRunning = false;
     }
 
     @Nullable
