@@ -1,17 +1,16 @@
 package com.quarantine.uploadlocation
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
 import kotlinx.android.synthetic.main.activity_main.*
 import androidx.work.WorkManager
 import com.quarantine.uploadlocation.worker.NotificationWorker
 import androidx.work.PeriodicWorkRequest
-import java.time.Duration.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -21,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        // scheduling worker for start the work, job for this worker to recover the foreground service
         createWorkerAndEnqueueRequest()
 
         start_upload_location.setOnClickListener { view ->
@@ -30,16 +30,18 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun createWorkerAndEnqueueRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val mWorkManager = WorkManager.getInstance()
-            val ofSeconds = ofSeconds(15)
-            val mRequest = PeriodicWorkRequest.Builder(NotificationWorker::class.java, 3, TimeUnit.SECONDS).build()
+        val mWorkManager = WorkManager.getInstance()
+        // We want to keep the work if its already there. If we keep on changing the request, we might never execute the work.
+        val existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.REPLACE
 
-            mWorkManager.enqueue(mRequest)
-        } else {
-            // Do nothing
-        }
+        val mRequest =
+            PeriodicWorkRequest.Builder(NotificationWorker::class.java, 3, TimeUnit.SECONDS).build()
 
+        mWorkManager.enqueueUniquePeriodicWork(
+            NotificationWorker.WORK,
+            existingPeriodicWorkPolicy,
+            mRequest
+        )
     }
 
     // for starting the service
