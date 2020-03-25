@@ -24,7 +24,7 @@ import com.quarantine.uploadlocation.poll.PollHandler;
 public class ForegroundService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
 
-    private final int pollingInterval = 60000; // 60 sec
+    private final int pollingInterval = 5000; // 60 sec
 
     private boolean isForgroundServiceRunning = false;
 
