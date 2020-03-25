@@ -9,15 +9,14 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.quarantine.data.LocationRepository;
 import com.quarantine.uploadlocation.poll.PollHandler;
 
 public class ForegroundService extends Service {
@@ -40,8 +39,7 @@ public class ForegroundService extends Service {
         createNotificationChannel();
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Foreground Service")
@@ -73,16 +71,17 @@ public class ForegroundService extends Service {
         }.execute();
     }
 
-    PollHandler.PollCallback callback = new PollHandler.PollCallback(){
+    PollHandler.PollCallback callback = new PollHandler.PollCallback() {
 
         @Override
         public void onPolled() {
             Log.d("Forground service : ", "let's upload location again ");
+
+            LocationRepository.INSTANCE.postLocation(12345.56, 12344.44);
         }
 
         @Override
         public void onPolledCompleted() {
-
         }
 
         @Override
@@ -92,14 +91,12 @@ public class ForegroundService extends Service {
 
         @Override
         public void stopPolling() {
-
         }
     };
 
     private void startPoller() {
         pollHandler.sendMessage(PollHandler.getMessageToStartPolling(true));
     }
-
 
     @Override
     public void onDestroy() {
