@@ -10,11 +10,12 @@ import javax.security.auth.callback.Callback
 
 object LocationRepository {
 
-    private val locationService = ServiceHelper.getNetworkClient().create(LocationService::class.java)
+    var locationService: LocationService? = null
 
     fun getLocation() {
-        val call = locationService.getLocation(getDeviceId())
-        call.enqueue(object : Callback, retrofit2.Callback<Location> {
+        if ( locationService == null ) { locationService = ServiceHelper.getNetworkClient().create(LocationService::class.java) }
+        val call = locationService?.getLocation(getDeviceId())
+        call?.enqueue(object : Callback, retrofit2.Callback<Location> {
             override fun onResponse(call: Call<Location>, response: Response<Location>) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
@@ -26,6 +27,8 @@ object LocationRepository {
     }
 
     fun postLocation(lat: Double, lng: Double) {
+        if ( locationService == null ) { locationService = ServiceHelper.getNetworkClient().create(LocationService::class.java) }
+
         val locationRequest = Location()
         locationRequest.mode = "raw"
         val raw = Raw()
@@ -34,8 +37,8 @@ object LocationRepository {
         raw.lng = lng
         locationRequest.raw = raw
 
-        val call = locationService.postLocation(locationRequest)
-        call.enqueue(object : Callback, retrofit2.Callback<Location> {
+        val call = locationService?.postLocation(locationRequest)
+        call?.enqueue(object : Callback, retrofit2.Callback<Location> {
             override fun onResponse(call: Call<Location>, response: Response<Location>) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
