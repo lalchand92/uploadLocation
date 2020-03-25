@@ -6,10 +6,10 @@ import retrofit2.http.*
 
 interface LocationService {
 
-    @GET("/LatLng")
+    @GET("LatLng")
     fun getLocation(@Query("DeviceId") deviceId: String) : Call<Location>
 
-    @POST("/LatLng")
     @Headers("Content-Type: application/json")
-    fun postLocation(@Body body: Location): Call<Location>
+    @POST("LatLng")
+    fun postLocation(@Header("Authorization") authorization: String, @Body body: Location): Call<Location>
 }

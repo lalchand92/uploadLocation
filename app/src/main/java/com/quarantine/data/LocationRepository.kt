@@ -1,6 +1,6 @@
 package com.quarantine.data
 
-import com.quarantine.data.base.ServiceHelper
+import android.util.Log
 import com.quarantine.data.remote.LocationService
 import com.quarantine.data.remote.model.response.Location
 import com.quarantine.data.remote.model.response.Raw
@@ -8,27 +8,20 @@ import retrofit2.Call
 import retrofit2.Response
 import javax.security.auth.callback.Callback
 
-object LocationRepository {
-
-    var locationService: LocationService? = null
+class LocationRepository(private val locationService: LocationService) {
 
     fun getLocation() {
-        if ( locationService == null ) { locationService = ServiceHelper.getNetworkClient().create(LocationService::class.java) }
-        val call = locationService?.getLocation(getDeviceId())
-        call?.enqueue(object : Callback, retrofit2.Callback<Location> {
+        val call = locationService.getLocation(getDeviceId())
+        call.enqueue(object : Callback, retrofit2.Callback<Location> {
             override fun onResponse(call: Call<Location>, response: Response<Location>) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun onFailure(call: Call<Location>, t: Throwable) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         })
     }
 
     fun postLocation(lat: Double, lng: Double) {
-        if ( locationService == null ) { locationService = ServiceHelper.getNetworkClient().create(LocationService::class.java) }
-
         val locationRequest = Location()
         locationRequest.mode = "raw"
         val raw = Raw()
@@ -37,19 +30,23 @@ object LocationRepository {
         raw.lng = lng
         locationRequest.raw = raw
 
-        val call = locationService?.postLocation(locationRequest)
-        call?.enqueue(object : Callback, retrofit2.Callback<Location> {
+        val call = locationService.postLocation(getToken(),locationRequest)
+        call.enqueue(object : Callback, retrofit2.Callback<Location> {
             override fun onResponse(call: Call<Location>, response: Response<Location>) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                Log.d("Forground service : ", "success response $response")
             }
 
             override fun onFailure(call: Call<Location>, t: Throwable) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                Log.d("Forground service : ", "fail response  ${t.message},  ${t.printStackTrace()}")
             }
         })
     }
 
     fun getDeviceId(): String {
-        return "Naveen"
+        return "Lalchand"
+    }
+
+    fun getToken(): String {
+        return "bearer 9AdLfiAWmOf5vBj2j2pjmWAHa6jPxldUPRllwnYrdNTbR_EpfcAjVSrgseGrictMwyTysPyS9WrxVSZsTZq0f-ApR6g3lzb5au2FbQVsXlUnQ1s8yDC9hqw42a19tG9sWzp9j_707_F2UblJX_VtbBuljykddQLjE-jzNEgV56HNByt08WhdaWcK28LMAn-ZNrHrz5Y4jfptBRkiD_Yw81_6HBXAmx_VWtZKrVrkLjq5TtXkz1KSGzV1madu4yCZ"
     }
 }
