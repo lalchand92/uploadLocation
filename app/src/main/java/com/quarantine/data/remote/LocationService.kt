@@ -11,5 +11,5 @@ interface LocationService {
 
     @Headers("Content-Type: application/json")
     @POST("LatLng")
-    fun postLocation(@Header("Authorization") authorization: String, @Body body: Location): Call<Location>
+    fun postLocation(@Body body: Location): Call<Location>
 }

@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -11,6 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import androidx.work.WorkManager
 import com.quarantine.uploadlocation.worker.NotificationWorker
 import androidx.work.PeriodicWorkRequest
+import com.quarantine.uploadlocation.utils.Constants
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -24,7 +27,19 @@ class MainActivity : AppCompatActivity() {
         createWorkerAndEnqueueRequest()
 
         start_upload_location.setOnClickListener { view ->
-            startService()
+            val etDeviceId = findViewById<EditText>(R.id.et_device_id)
+            val deviceId = etDeviceId.text.toString()
+            if(Constants.DEVICE_ID == "hardCoded"){
+                if(!deviceId.isNullOrEmpty()) {
+                    Constants.DEVICE_ID = deviceId
+                    etDeviceId.isEnabled = false
+                    Constants.startService(applicationContext)
+                }else{
+                    Toast.makeText(this, "Please enter your id ", Toast.LENGTH_LONG).show()
+                }
+            }else{
+                Constants.startService(applicationContext)
+            }
         }
     }
 
@@ -44,12 +59,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // for starting the service
-    private fun startService() {
-        val serviceIntent = Intent(this, ForegroundService::class.java)
-        serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android")
-        ContextCompat.startForegroundService(this, serviceIntent)
-    }
 
     // for stopping the service
     fun stopService() {

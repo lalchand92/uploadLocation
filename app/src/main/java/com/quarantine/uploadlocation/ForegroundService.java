@@ -30,11 +30,14 @@ import com.quarantine.data.LocationRepository;
 import com.quarantine.data.base.ServiceHelper;
 import com.quarantine.data.remote.LocationService;
 import com.quarantine.uploadlocation.poll.PollHandler;
+import com.quarantine.uploadlocation.utils.Constants;
+
+import java.util.UUID;
 
 public class ForegroundService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
 
-    private final int pollingInterval = 60000; // 60 sec
+    private final int pollingInterval = 5000; // 60 sec
 
     private boolean isForgroundServiceRunning = false;
 
@@ -45,8 +48,15 @@ public class ForegroundService extends Service {
     public void onCreate() {
         super.onCreate();
         pollHandler = new PollHandler(pollingInterval, callback, Looper.getMainLooper());
-        wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock");
-        wakeLock.acquire();
+
+        try {
+            wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService " + UUID.randomUUID().toString());
+            wakeLock.acquire();
+        }catch (Exception e){
+            // Unable to acquire wake lock
+            Log.d("Forground service : ", "unable to get the log : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -62,10 +72,11 @@ public class ForegroundService extends Service {
                     0, notificationIntent, 0);
 
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("Foreground Service")
+                    .setContentTitle("Location updates")
                     .setContentText(input)
                     .setSmallIcon(R.drawable.upload_location)
                     .setContentIntent(pendingIntent)
+                    .setPriority(NotificationCompat.PRIORITY_LOW)
                     .build();
 
             startForeground(1, notification);
@@ -147,6 +158,10 @@ public class ForegroundService extends Service {
     @Override
     public void onDestroy() {
         Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show();
+
+        // service is getting destroyed let's start it again.
+        Constants.INSTANCE.startService(getApplicationContext());
+
         super.onDestroy();
         isForgroundServiceRunning = false;
     }
