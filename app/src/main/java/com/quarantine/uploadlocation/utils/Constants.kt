@@ -10,7 +10,6 @@ object Constants {
     const val MESSAGE_STATUS = "message_status"
     var DEVICE_ID = "hardCoded"
 
-
     // for starting the service
     fun startService(context : Context) {
         val serviceIntent = Intent(context, ForegroundService::class.java)
