@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         val existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.REPLACE
 
         val mRequest =
-            PeriodicWorkRequest.Builder(NotificationWorker::class.java, 3, TimeUnit.SECONDS).build()
+            PeriodicWorkRequest.Builder(NotificationWorker::class.java, 5, TimeUnit.MINUTES).build()
 
         mWorkManager.enqueueUniquePeriodicWork(
             NotificationWorker.WORK,
